@@ -12,7 +12,7 @@ export default function Footer() {
           Email
         </a>
         <a
-          href="https://www.linkedin.com/in/yourusername"
+          href="https://www.linkedin.com/in/iangbrown/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 hover:text-blue-600 transition"
@@ -21,7 +21,7 @@ export default function Footer() {
           LinkedIn
         </a>
         <a
-          href="https://github.com/yourusername"
+          href="https://github.com/igb21/power-tracker"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 hover:text-blue-600 transition"
