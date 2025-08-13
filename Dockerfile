@@ -1,37 +1,21 @@
-# 🧱 Stage 1: Build
-FROM node:18-alpine AS builder
+# Use Node 20 base image
+FROM node:20-alpine
 
+# Set working directory
 WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
-# Copy source code
+# Copy rest of the app
 COPY . .
 
-# Build Next.js app
+# Build the Next.js app
 RUN npm run build
 
-# 🗃️ Stage 2: Runtime
-FROM node:18-alpine AS runner
-
-WORKDIR /app
-
-# Install only production deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
-# Copy built app from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/db.sqlite ./db.sqlite
-COPY --from=builder /app/.env ./.env
-
-# Expose port
+# Expose port and start
 EXPOSE 3000
-
-# Start the server
 CMD ["npm", "start"]
