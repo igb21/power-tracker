@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#228B22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Tower -->
+  <line x1="16" y1="28" x2="16" y2="16" />
+  <!-- Blades (evenly spaced at 120°) -->
+  <line x1="16" y1="16" x2="16" y2="6" />
+  <line x1="16" y1="16" x2="22.39" y2="22" />
+  <line x1="16" y1="16" x2="9.61" y2="22" />
+  <!-- Hub -->
+  <circle cx="16" cy="16" r="2" fill="#228B22" />
+</svg>

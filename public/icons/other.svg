@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Simplified question mark -->
+  <path d="M16 8c0-2 1.5-4 4-4s4 2 4 4c0 2-1 3-3 4-2 1-3 2-3 4" />
+  <circle cx="16" cy="24" r="2" fill="black" />
+</svg>
