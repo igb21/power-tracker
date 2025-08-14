@@ -40,8 +40,6 @@
     "autoprefixer": "^10.4.21",
     "dotenv": "^17.2.1",
     "drizzle-kit": "^0.18.1",
-    "eslint": "^9",
-    "eslint-config-next": "15.4.4",
     "jest": "^30.0.5",
     "node-mocks-http": "^1.17.2",
     "postcss": "^8.5.6",

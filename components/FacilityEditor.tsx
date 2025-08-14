@@ -204,10 +204,11 @@
             <div>
               <label className="block text-sm font-medium">Capacity (MW) *</label>
               <input
-                type="number"
-                {...register('capacity_mw')}
-                className="w-full border px-2 py-1 rounded"
-              />
+                  type="number"
+                  step="any"
+                  {...register('capacity_mw', { valueAsNumber: true })}
+                  className="w-full border px-2 py-1 rounded"
+                />
               {errors.capacity_mw && <p className="text-red-600 text-sm">{errors.capacity_mw.message}</p>}
             </div>
 
