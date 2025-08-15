@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Github } from 'lucide-react';
+import { Mail, Linkedin, Github, Presentation } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -29,13 +29,22 @@ export default function Footer() {
           <Github size={16} />
           GitHub
         </a>
-         <a
+        <a
           href="https://nextjs.org/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 hover:text-blue-600 transition"
         >
-            <img src="/next.svg" alt="Inlaid Logo" className="h-3 w-auto opacity-50" />
+          <img src="/next.svg" alt="Inlaid Logo" className="h-3 w-auto opacity-50" />
+        </a>
+        <a
+          href="/app-presentation.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 hover:text-blue-600 transition"
+        >
+          <Presentation size={16} />
+          Presentation
         </a>
       </div>
     </footer>
