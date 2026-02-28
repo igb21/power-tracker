@@ -1,6 +1,6 @@
       import { sql, eq, asc, gte, and, inArray } from 'drizzle-orm';
       import { db } from './dbConnection';
-      import { countries, fuelSources, facilities, capacityByCountry, generationByCountry, facilitiesView } from './dbSchema';
+      import { countries, fuelSources, facilities, capacityByCountry, generationByCountry, facilitiesView, dataCenters } from './dbSchema';
 
 
 
@@ -164,29 +164,25 @@
 
 
       //  function to get total power capacity (in MW) grouped by fuel type,
-      //  No parameters, returns all fuel types
-      export async function getFuelTypeCapacity() {
+      //  Optionally filtered by country and micro-facility threshold.
+      export async function getFuelTypeCapacity(countryCode?: string | null, includeMicro = false) {
         try {
+          const filters = [];
+          if (countryCode) filters.push(eq(facilities.country_code, countryCode));
+          if (!includeMicro) filters.push(gte(facilities.capacity_mw, 50));
+
           const result = await db
             .select({
-              // Select the fuel code (e.g. 1 = Solar, 2 = Wind, etc.)
               fuel_code: fuelSources.fuel_code,
-              // fuel (Solar, Wind, etc.)
-              fuel: fuelSources.fuel, 
-              // Calculate total generation in MW, rounded to whole number
+              fuel: fuelSources.fuel,
               generation_mw: sql`ROUND(SUM(${facilities.capacity_mw}), 0)`.as('capacity_mw'),
             })
             .from(facilities)
-
             .innerJoin(fuelSources, eq(facilities.fuel_code, fuelSources.fuel_code))
-
-            // Group by fuel type so we get one row per fuel
+            .where(filters.length > 0 ? and(...filters) : undefined)
             .groupBy(facilities.fuel_code)
-
-            // Sort by total generation, highest first
             .orderBy(sql`SUM(${facilities.capacity_mw}) DESC`);
 
-          // Debug output
           if (process.env.DEBUG) {
             console.debug('getFuelTypeCapacity query result:', result);
           }
@@ -202,6 +198,59 @@
 
 
     
+
+    // Returns capacity in MW grouped by both country AND fuel type,
+    // used for the cross-tabulated country × fuel table.
+    // Optionally filtered by country and micro-facility threshold.
+    export async function getCountryFuelCapacity(countryCode?: string | null, includeMicro = false) {
+      try {
+        const filters = [];
+        if (countryCode) filters.push(eq(facilities.country_code, countryCode));
+        if (!includeMicro) filters.push(gte(facilities.capacity_mw, 50));
+
+        const result = await db
+          .select({
+            country_long: countries.country_long,
+            country_code: countries.country_code,
+            fuel:      fuelSources.fuel,
+            fuel_code: fuelSources.fuel_code,
+            capacity_mw: sql`ROUND(SUM(${facilities.capacity_mw}), 0)`.as('capacity_mw'),
+          })
+          .from(facilities)
+          .innerJoin(countries,    eq(facilities.country_code, countries.country_code))
+          .innerJoin(fuelSources,  eq(facilities.fuel_code,    fuelSources.fuel_code))
+          .where(filters.length > 0 ? and(...filters) : undefined)
+          .groupBy(
+            countries.country_code,
+            countries.country_long,
+            fuelSources.fuel_code,
+            fuelSources.fuel,
+          )
+          .orderBy(countries.country_long, fuelSources.fuel);
+
+        return result;
+      } catch (error: any) {
+        console.error('ORM error in getCountryFuelCapacity:', error?.message || error);
+        throw error;
+      }
+    }
+
+
+    // Returns all AI/hyperscale data centers, sorted by capacity descending.
+    export async function getDataCenters() {
+      try {
+        const result = await db
+          .select()
+          .from(dataCenters)
+          .orderBy(sql`${dataCenters.capacity_mw} DESC NULLS LAST`);
+
+        return result;
+      } catch (error: any) {
+        console.error('ORM error in getDataCenters:', error?.message || error);
+        throw error;
+      }
+    }
+
 
     // Function to update a facility by its gppd_idnr.
     // id - The facility's gppd_idnr

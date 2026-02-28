@@ -64,6 +64,23 @@ export const generationByCountry = sqliteTable('vw_generation_by_country', {
   total_generation: real('total_generation'),
 });
 
+// AI / hyperscale data centers (Epoch AI dataset)
+export const dataCenters = sqliteTable('data_centers', {
+  id:           text('id').primaryKey(),          // Handle
+  name:         text('name').notNull(),            // Title
+  project:      text('project'),
+  address:      text('address'),
+  latitude:     real('latitude').notNull(),
+  longitude:    real('longitude').notNull(),
+  owner:        text('owner'),
+  users:        text('users'),
+  capacity_mw:  real('capacity_mw'),               // Current power (MW)
+  h100_equiv:   real('h100_equiv'),                // Current H100 equivalents
+  capex_bn:     real('capex_bn'),                  // Capital cost (2025 USD billions)
+});
+
+export type DataCenter = InferSelectModel<typeof dataCenters>;
+
 export interface FuelCapacityWithName {
   fuel_code: number;
   fuel: string;           // e.g. "Solar", "Wind"

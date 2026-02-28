@@ -1,14 +1,7 @@
 'use client';
 
-/**
- * FacilityGridRoute
- *
- * Displays a table of country-level energy capacity data.
- * Sidebar filters by fuel type. Table includes pagination.
- * Mobile-friendly layout with responsive sidebar and table.
- */
-
 import { useEffect, useState } from 'react';
+import { Button, Table, Spinner } from 'react-bootstrap';
 import SidebarFilter from '../../components/SidebarFilter';
 import type { Capacity } from '@/lib/dbSchema';
 
@@ -17,11 +10,7 @@ export default function FacilityGridRoute() {
     country: string;
     fuel: number | null;
     includeMicro: boolean;
-  }>({
-    country: '',
-    fuel: null,
-    includeMicro: true,
-  });
+  }>({ country: '', fuel: null, includeMicro: true });
 
   const [data, setData] = useState<Capacity[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,25 +23,14 @@ export default function FacilityGridRoute() {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const params = new URLSearchParams();
-        if (filters.fuel !== null) {
-          params.append('fuel', filters.fuel.toString());
-        }
-
+        if (filters.fuel !== null) params.append('fuel', filters.fuel.toString());
         const res = await fetch(`/api/country-capacity?${params.toString()}`, {
-          headers: {
-            'x-api-key': process.env.NEXT_PUBLIC_REST_API_KEY!,
-          },
+          headers: { 'x-api-key': process.env.NEXT_PUBLIC_REST_API_KEY! },
         });
-
         const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error || 'Failed to fetch capacity data');
-        }
-
+        if (!res.ok) throw new Error(json.error || 'Failed to fetch capacity data');
         setData(json.data);
         setPage(0);
       } catch (err: any) {
@@ -61,7 +39,6 @@ export default function FacilityGridRoute() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [filters.fuel]);
 
@@ -69,76 +46,74 @@ export default function FacilityGridRoute() {
   const totalPages = Math.ceil(data.length / pageSize);
 
   return (
-    <div className="h-full w-full px-4 pt-1 pb-1 z-10 relative">
-      {/* Mobile-only toggle button for sidebar */}
-      <button
-        className="md:hidden mb-2 px-3 py-2 bg-blue-900 text-white rounded"
+    <div>
+      {/* Mobile filter toggle */}
+      <Button
+        variant="primary"
+        size="sm"
+        className="d-md-none mb-2"
         onClick={() => setShowSidebar((prev) => !prev)}
       >
         {showSidebar ? 'Hide Filters' : 'Show Filters'}
-      </button>
+      </Button>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar: visible on desktop, toggleable on mobile */}
+      <div className="d-flex flex-column flex-md-row gap-3">
+        {/* Sidebar */}
         {showSidebar && (
-          <div className="md:w-64 w-full">
+          <div style={{ width: '240px', flexShrink: 0 }}>
             <SidebarFilter onFilterChange={setFilters} disableCountry={true} />
           </div>
         )}
 
-        {/* Table container */}
-        <div className="flex-1 h-full overflow-y-auto rounded-lg shadow-sm border border-gray-200 bg-white pb-6">
+        {/* Table card */}
+        <div className="flex-grow-1 border rounded bg-white">
           {loading && (
-            <div className="text-center mt-4 text-sm text-gray-500">Loading data...</div>
+            <div className="d-flex justify-content-center py-4">
+              <Spinner animation="border" variant="primary" size="sm" />
+            </div>
           )}
-
-          {error && (
-            <div className="text-center mt-4 text-sm text-red-500">Error: {error}</div>
-          )}
+          {error && <p className="text-danger text-center py-3 small">Error: {error}</p>}
 
           {!loading && !error && (
             <>
-              {/* Scrollable table wrapper */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
-                  <thead className="bg-blue-900 text-white sticky top-0 z-10 text-left">
+              <div className="table-responsive">
+                <Table striped hover size="sm" className="mb-0">
+                  <thead className="table-primary">
                     <tr>
-                      <th className="px-4 py-2 w-1/2">Country</th>
-                      <th className="px-4 py-2 w-1/2">Total Capacity (MW)</th>
+                      <th>Country</th>
+                      <th>Total Capacity (MW)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pagedData.map((row, index) => (
-                      <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
-                        <td className="px-4 py-2 bg-white">{row.country_long}</td>
-                        <td className="px-4 py-2 bg-white">{row.capacity_mw}</td>
+                      <tr key={index}>
+                        <td>{row.country_long}</td>
+                        <td>{row.capacity_mw}</td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               </div>
 
-              {/* Pagination controls */}
-              <div className="flex justify-between items-center px-4 py-4 text-sm">
-                <button
+              {/* Pagination */}
+              <div className="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
                   onClick={() => setPage((p) => Math.max(p - 1, 0))}
                   disabled={page === 0}
-                  className="px-4 py-2 rounded bg-blue-100 text-blue-800 disabled:opacity-50"
                 >
                   Previous
-                </button>
-
-                <span>
-                  Page {page + 1} of {totalPages}
-                </span>
-
-                <button
+                </Button>
+                <span className="text-muted small">Page {page + 1} of {totalPages}</span>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
                   onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
                   disabled={page >= totalPages - 1}
-                  className="px-4 py-2 rounded bg-blue-100 text-blue-800 disabled:opacity-50"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </>
           )}

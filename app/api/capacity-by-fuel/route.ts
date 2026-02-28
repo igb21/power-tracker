@@ -7,11 +7,14 @@ import { withApiKey } from '@/app/api/api-authenticator';
  * Protected by API key middleware via `withApiKey`.
  * Returns an array of fuel types with their total generation in MW.
  */
-export const GET = withApiKey(async (_req: Request) => {
+export const GET = withApiKey(async (req: Request) => {
+  const { searchParams } = new URL(req.url);
+  const countryCode  = searchParams.get('country')      || null;
+  const includeMicro = searchParams.get('includeMicro') === 'true';
   try {
     let data;
     try {
-      data = await getFuelTypeCapacity();
+      data = await getFuelTypeCapacity(countryCode, includeMicro);
     } catch (dbError: any) {
       return NextResponse.json(
         {
