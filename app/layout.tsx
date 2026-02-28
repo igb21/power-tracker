@@ -2,7 +2,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
 import TopNavbar from '@/components/TopNavbar';
-import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -20,7 +19,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </div>
         </main>
-        <Footer />
       </body>
     </html>
   );
