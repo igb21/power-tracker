@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import { Zap, MapPin, Globe } from 'lucide-react';
+import { Zap, MapPin, Globe, TrendingUp, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
-  { name: 'World Facility Map',     href: '/facility-map',     icon: MapPin },
-  { name: 'World Capacity by Fuel', href: '/capacity-by-fuel', icon: Globe },
+  { name: 'World Facility Map',     href: '/facility-map',        icon: MapPin },
+  { name: 'World Capacity by Fuel', href: '/capacity-by-fuel',    icon: Globe },
+  { name: 'Generation Trends',      href: '/generation-trends',   icon: TrendingUp },
+  { name: 'US Data Centers',        href: '/data-centers',        icon: Building2 },
 ];
 
 export default function TopNavbar() {
@@ -22,7 +24,7 @@ export default function TopNavbar() {
       data-bs-theme="light"
       expanded={expanded}
       onToggle={setExpanded}
-      className="mb-3 px-3"
+      className="mb-1 px-3"
     >
       <Navbar.Brand as={Link} href="/facility-map" className="d-flex align-items-center gap-2">
         <Zap size={18} />

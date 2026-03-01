@@ -1,6 +1,48 @@
 // Shared fuel type colours and labels — used by both the map markers and charts.
 // Keyed by fuel_code integer from the fuel_sources table.
 
+// ── Ember variable colours ────────────────────────────────────────────────────
+// Keyed by Ember variable name (matches ember_yearly.variable).
+// Stack order (index = bottom → top on area chart):
+export const EMBER_FUEL_ORDER = [
+  'Coal', 'Gas', 'Other Fossil', 'Nuclear',
+  'Hydro', 'Bioenergy', 'Other Renewables', 'Wind', 'Solar',
+];
+
+export const emberColorMap: Record<string, string> = {
+  'Coal':             '#495057', // dark gray
+  'Gas':              '#fd7e14', // orange
+  'Other Fossil':     '#6c757d', // gray
+  'Nuclear':          '#6f42c1', // purple
+  'Hydro':            '#0d6efd', // blue
+  'Bioenergy':        '#198754', // green
+  'Other Renewables': '#e83e8c', // pink
+  'Wind':             '#20c997', // teal
+  'Solar':            '#ffc107', // amber
+};
+
+// ── GPPD fuel_code → Ember variable name ────────────────────────────────────
+// Used to translate the SidebarFilter fuel selection to an Ember query filter.
+// null = no direct Ember equivalent for that GPPD fuel type.
+export const gppdToEmber: Record<number, string | null> = {
+  1:  'Hydro',
+  2:  'Solar',
+  3:  'Gas',
+  4:  'Other Fossil',
+  5:  'Other Fossil',    // Oil
+  6:  'Wind',
+  7:  'Nuclear',
+  8:  'Coal',
+  9:  'Bioenergy',       // Waste
+  10: 'Bioenergy',       // Biomass
+  11: 'Other Renewables',// Wave & Tidal
+  12: 'Other Fossil',    // Petcoke
+  13: 'Other Renewables',// Geothermal
+  14: null,              // Storage
+  15: null,              // Cogeneration
+  16: null,              // None
+};
+
 export const fuelColorMap: Record<number, string> = {
   1:  '#0d6efd', // Hydro        — Bootstrap blue
   2:  '#ffc107', // Solar        — amber

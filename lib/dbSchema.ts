@@ -48,25 +48,41 @@ export const facilitiesView = sqliteTable('vw_facilities', {
 
 
 
-// AI / hyperscale data centers (Epoch AI dataset)
-export const dataCenters = sqliteTable('data_centers', {
-  id:           text('id').primaryKey(),          // Handle
-  name:         text('name').notNull(),            // Title
-  project:      text('project'),
-  address:      text('address'),
-  latitude:     real('latitude').notNull(),
-  longitude:    real('longitude').notNull(),
-  owner:        text('owner'),
-  users:        text('users'),
-  capacity_mw:  real('capacity_mw'),               // Current power (MW)
-  h100_equiv:   real('h100_equiv'),                // Current H100 equivalents
-  capex_bn:     real('capex_bn'),                  // Capital cost (2025 USD billions)
+
+// Ember yearly electricity data (generation, capacity, demand, emissions by country+year+variable)
+export const emberYearly = sqliteTable('ember_yearly', {
+  country_code: text('country_code').notNull(),
+  year:         integer('year').notNull(),
+  category:     text('category').notNull(),    // e.g. "Electricity generation"
+  subcategory:  text('subcategory').notNull(), // e.g. "Fuel", "Aggregate fuel", "Total"
+  variable:     text('variable').notNull(),    // e.g. "Solar", "Wind", "Total Generation"
+  unit:         text('unit').notNull(),        // e.g. "TWh", "GW", "mtCO2"
+  value:        real('value'),
 });
 
-export type DataCenter = InferSelectModel<typeof dataCenters>;
+export type EmberYearly = InferSelectModel<typeof emberYearly>;
 
 export interface FuelCapacityWithName {
   fuel_code: number;
   fuel: string;           // e.g. "Solar", "Wind"
   generation_mw: number;
 }
+
+// Aterio US data centers (free sample, 297 facilities)
+export const dataCenters = sqliteTable('data_centers', {
+  id:              text('id').primaryKey(),         // ATERIO_DATA_CENTER_UID
+  name:            text('name'),                    // DATA_CENTER_BUILDING_NAME
+  operator:        text('operator'),                // PROVIDER_NAME
+  stage:           text('stage'),                   // DATA_CENTER_STAGE
+  is_ai:           integer('is_ai').default(0),     // FLG_AI_FACILITY = 'Y' → 1
+  city:            text('city'),                    // CITY_NAME
+  state:           text('state'),                   // STATE_CODE
+  latitude:        real('latitude').notNull(),
+  longitude:       real('longitude').notNull(),
+  capacity_mw:     real('capacity_mw'),             // SELECTED_POWER_CAPACITY_MW
+  announced_date:  text('announced_date'),          // DATA_CENTER_ANNOUNCED_DATE
+  activation_date: text('activation_date'),         // DATA_CENTER_ACTIVATION_DATE or ESTIMATED_ACTIVE_DATE_BY
+  utility:         text('utility'),                 // UTILITY_NAME
+});
+
+export type DataCenter = InferSelectModel<typeof dataCenters>;

@@ -1,67 +1,61 @@
 'use client';
 
-import { useMap } from 'react-leaflet';
-import { useEffect } from 'react';
+import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { DataCenter } from '@/lib/dbSchema';
 
-type Props = { dataCenters: DataCenter[] };
+// Color each stage
+const STAGE_COLOR: Record<string, string> = {
+  'Active':                   '#6f42c1',   // purple
+  'Construction':             '#fd7e14',   // orange
+  'Announcement':             '#ffc107',   // yellow
+  'Land Bank':                '#20c997',   // teal
+  'Delayed':                  '#6c757d',   // gray
+  'Cancelled':                '#dc3545',   // red
+  'Not Approved/Withdrawn':   '#dc3545',   // red
+};
 
-export const DC_COLOR = '#9b59b6'; // distinct purple, not used by any fuel type
-
-// Diamond size scales logarithmically with capacity (10–26px)
-function getDiamondSize(capacityMw: number | null): number {
-  if (!capacityMw) return 12;
-  const clamped = Math.max(1, Math.min(capacityMw, 800));
-  return 10 + (Math.log(clamped) / Math.log(800)) * 16;
+function stageColor(stage: string | null): string {
+  return STAGE_COLOR[stage ?? ''] ?? '#adb5bd';
 }
 
-function makeDiamondIcon(size: number): L.DivIcon {
-  const half = size / 2;
+function dcIcon(dc: DataCenter): L.DivIcon {
+  const color  = stageColor(dc.stage);
+  const size   = dc.capacity_mw
+    ? Math.max(8, Math.min(28, 6 + Math.sqrt(dc.capacity_mw) * 0.7))
+    : 9;
+  const border = dc.is_ai ? '2px solid #fff' : '1.5px solid rgba(0,0,0,0.25)';
+  const shape  = 'border-radius:2px';   // square = data center, circle = power plant
+
   return L.divIcon({
     className: '',
-    html: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-      <polygon
-        points="${half},0 ${size},${half} ${half},${size} 0,${half}"
-        fill="${DC_COLOR}" fill-opacity="0.85"
-        stroke="white" stroke-width="1.5"/>
-    </svg>`,
+    html: `<div style="
+      width:${size}px; height:${size}px;
+      background:${color};
+      border:${border};
+      ${shape};
+      opacity:0.88;
+    "></div>`,
     iconSize:   [size, size],
-    iconAnchor: [half, half],
-    popupAnchor:[0, -half],
+    iconAnchor: [size / 2, size / 2],
   });
 }
 
-export default function DCMarkers({ dataCenters }: Props) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!dataCenters || dataCenters.length === 0) return;
-
-    const layerGroup = L.layerGroup().addTo(map);
-
-    dataCenters.forEach((dc) => {
-      const size   = getDiamondSize(dc.capacity_mw);
-      const marker = L.marker([dc.latitude, dc.longitude], { icon: makeDiamondIcon(size) });
-
-      const capStr   = dc.capacity_mw ? `${dc.capacity_mw.toLocaleString()} MW` : 'capacity TBC';
-      const ownerStr = dc.owner ?? 'Unknown';
-
-      marker.bindPopup(`
-        <div style="font-size:13px;min-width:180px;">
-          <div style="font-weight:600;margin-bottom:3px;">${dc.name}</div>
-          <div style="color:#666;margin-bottom:2px;">${ownerStr}</div>
-          <div style="color:#666;margin-bottom:4px;">${capStr}</div>
-          ${dc.users   ? `<div style="color:#888;font-size:11px;">Users: ${dc.users}</div>` : ''}
-          ${dc.project ? `<div style="color:#888;font-size:11px;">Project: ${dc.project}</div>` : ''}
-        </div>
-      `, { maxWidth: 250 });
-
-      layerGroup.addLayer(marker);
-    });
-
-    return () => { map.removeLayer(layerGroup); };
-  }, [map, dataCenters]);
-
-  return null;
+export default function DCMarkers({ facilities }: { facilities: DataCenter[] }) {
+  return (
+    <>
+      {facilities.map((dc, i) => (
+        <Marker key={dc.id ?? `dc-${i}`} position={[dc.latitude, dc.longitude]} icon={dcIcon(dc)}>
+          <Popup>
+            <strong>{dc.name ?? 'Unnamed'}</strong><br />
+            {dc.operator && <><em>{dc.operator}</em><br /></>}
+            {dc.city && dc.state && <>{dc.city}, {dc.state}<br /></>}
+            Stage: {dc.stage ?? 'Unknown'}<br />
+            {dc.capacity_mw != null && <>Capacity: {dc.capacity_mw.toLocaleString()} MW<br /></>}
+            {dc.is_ai === 1 && <span style={{ color: '#6f42c1', fontWeight: 600 }}>AI Facility</span>}
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
 }

@@ -1,22 +1,5 @@
 @import 'leaflet/dist/leaflet.css';
-@import 'leaflet.markercluster/dist/MarkerCluster.css';
-@import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 body {
   background-color: #f8f9fa;
-}
-
-.marker-cluster-small,
-.marker-cluster-medium,
-.marker-cluster-large {
-  background-color: #0d6efd !important;
-  border: 2px solid #0b5ed7 !important;
-  color: white !important;
-}
-
-.marker-cluster-small div,
-.marker-cluster-medium div,
-.marker-cluster-large div {
-  background-color: #0d6efd !important;
-  color: white !important;
 }

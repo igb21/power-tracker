@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <TopNavbar />
-        <main className="container-fluid px-3 px-xl-4 py-3">
+        <main className="container-fluid px-3 px-xl-4 py-1">
           <div className="mx-auto" style={{ maxWidth: '1600px' }}>
             {children}
           </div>

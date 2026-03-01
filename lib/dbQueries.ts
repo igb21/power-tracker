@@ -1,6 +1,6 @@
       import { sql, eq, asc, gte, and } from 'drizzle-orm';
       import { db } from './dbConnection';
-      import { countries, fuelSources, facilities, facilitiesView, dataCenters } from './dbSchema';
+      import { countries, fuelSources, facilities, facilitiesView, emberYearly, dataCenters } from './dbSchema';
 
 
 
@@ -155,21 +155,6 @@
     }
 
 
-    // Returns all AI/hyperscale data centers, sorted by capacity descending.
-    export async function getDataCenters() {
-      try {
-        const result = await db
-          .select()
-          .from(dataCenters)
-          .orderBy(sql`${dataCenters.capacity_mw} DESC NULLS LAST`);
-
-        return result;
-      } catch (error: any) {
-        console.error('ORM error in getDataCenters:', error?.message || error);
-        throw error;
-      }
-    }
-
 
     // Function to update a facility by its gppd_idnr.
     // id - The facility's gppd_idnr
@@ -188,5 +173,90 @@
       } catch (err: any) {
         console.error(`Database update failed for gppd_idnr=${id}:`, err);
         throw new Error(`Database update failed for gppd_idnr=${id}:`, err);
+      }
+    }
+
+
+    // Returns Ember yearly electricity data for a given category and subcategory,
+    // optionally filtered by country. Returns all years and variables for charting.
+    // category examples:    'Electricity generation', 'Electricity demand', 'Capacity', 'Power sector emissions'
+    // subcategory examples: 'Fuel', 'Aggregate fuel', 'Total', 'Demand', 'CO2 intensity'
+    export async function getEmberData(
+      category: string,
+      subcategory: string,
+      countryCode?: string | null,
+    ) {
+      try {
+        const filters = [
+          eq(emberYearly.category,    category),
+          eq(emberYearly.subcategory, subcategory),
+        ];
+        if (countryCode) filters.push(eq(emberYearly.country_code, countryCode));
+
+        const result = await db
+          .select()
+          .from(emberYearly)
+          .where(and(...filters))
+          .orderBy(asc(emberYearly.year), asc(emberYearly.variable));
+
+        return result;
+      } catch (error: any) {
+        console.error('ORM error in getEmberData:', error?.message || error);
+        throw error;
+      }
+    }
+
+
+    // Returns all data centers, optionally filtered by stage or AI flag.
+    export async function getDataCenters(stage?: string | null, aiOnly?: boolean) {
+      try {
+        const filters = [];
+        if (stage)   filters.push(eq(dataCenters.stage, stage));
+        if (aiOnly)  filters.push(eq(dataCenters.is_ai, 1));
+
+        const result = await db
+          .select()
+          .from(dataCenters)
+          .where(filters.length > 0 ? and(...filters) : undefined)
+          .orderBy(asc(dataCenters.name));
+
+        return result;
+      } catch (error: any) {
+        console.error('ORM error in getDataCenters:', error?.message || error);
+        throw error;
+      }
+    }
+
+
+    // Returns electricity generation (TWh) by fuel type and year from the Ember dataset,
+    // summed across all countries unless countryCode is specified.
+    // Optionally filtered to a single Ember fuel variable (e.g. 'Solar', 'Wind').
+    export async function getGenerationTrends(
+      countryCode?: string | null,
+      emberVariable?: string | null,
+    ) {
+      try {
+        const filters = [
+          eq(emberYearly.category,    'Electricity generation'),
+          eq(emberYearly.subcategory, 'Fuel'),
+        ];
+        if (countryCode)   filters.push(eq(emberYearly.country_code, countryCode));
+        if (emberVariable) filters.push(eq(emberYearly.variable,     emberVariable));
+
+        const result = await db
+          .select({
+            year:     emberYearly.year,
+            variable: emberYearly.variable,
+            value:    sql<number>`ROUND(SUM(${emberYearly.value}), 1)`.as('value'),
+          })
+          .from(emberYearly)
+          .where(and(...filters))
+          .groupBy(emberYearly.year, emberYearly.variable)
+          .orderBy(asc(emberYearly.year), asc(emberYearly.variable));
+
+        return result;
+      } catch (error: any) {
+        console.error('ORM error in getGenerationTrends:', error?.message || error);
+        throw error;
       }
     }

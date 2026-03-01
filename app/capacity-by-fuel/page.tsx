@@ -173,13 +173,15 @@ export default function FuelCapacityPage() {
   // ── Country × Fuel pivot table ─────────────────────────────────────────
 
   // Sorted unique fuel columns (by total capacity descending)
-  const fuelCols = fuelData.map((r) => r.fuel); // already sorted desc
+  // Keep fuelCols (fuel names) for Map lookups; fuelColData adds code for React keys
+  const fuelCols    = fuelData.map((r) => r.fuel);
+  const fuelColData = fuelData.map((r) => ({ fuel: r.fuel, code: r.fuel_code }));
 
   // Build map: countryCode → fuel → capacity
-  const pivot = new Map<string, { name: string; byFuel: Map<string, number>; total: number }>();
+  const pivot = new Map<string, { code: string; name: string | null; byFuel: Map<string, number>; total: number }>();
   crossData.forEach(({ country_long, country_code, fuel, capacity_mw }) => {
     if (!pivot.has(country_code)) {
-      pivot.set(country_code, { name: country_long, byFuel: new Map(), total: 0 });
+      pivot.set(country_code, { code: country_code, name: country_long, byFuel: new Map(), total: 0 });
     }
     const entry = pivot.get(country_code)!;
     entry.byFuel.set(fuel, (entry.byFuel.get(fuel) ?? 0) + Number(capacity_mw));
@@ -261,20 +263,20 @@ export default function FuelCapacityPage() {
                         Country
                       </th>
                       <th className="text-end">Total</th>
-                      {fuelCols.map((f) => (
-                        <th key={f} className="text-end">{f}</th>
+                      {fuelColData.map(({ fuel, code }) => (
+                        <th key={code} className="text-end">{fuel}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {tableRows.map(({ name, byFuel, total }) => (
-                      <tr key={name}>
+                    {tableRows.map(({ code, name, byFuel, total }) => (
+                      <tr key={code}>
                         <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontWeight: 500 }}>
                           {name}
                         </td>
                         <td className="text-end fw-semibold">{fmt(Math.round(total))}</td>
-                        {fuelCols.map((f) => (
-                          <td key={f} className="text-end text-muted">
+                        {fuelColData.map(({ fuel: f, code: fCode }) => (
+                          <td key={fCode} className="text-end text-muted">
                             {fmt(byFuel.get(f))}
                           </td>
                         ))}

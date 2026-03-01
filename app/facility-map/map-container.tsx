@@ -16,7 +16,7 @@ import { useState, useEffect, useRef } from 'react';
 import FacilityEditor from '../../components/FacilityEditor';
 import { Facility, DataCenter } from '@/lib/dbSchema';
 import ClusteredFacilities from './clustered-markers';
-import DCMarkers, { DC_COLOR } from './dc-markers';
+import DCMarkers from './dc-markers';
 
 type Filters = {
   country: string;
@@ -31,7 +31,7 @@ export default function MapContainerComponent({ filters }: { filters: Filters })
   // Stores the list of facilities to display on the map
   const [facilityData, setFacilityData] = useState<Facility[]>([]);
 
-  // AI data centers (fetched once, filter-independent)
+  // Stores data center data
   const [dcData, setDcData] = useState<DataCenter[]>([]);
 
   // Loading and error states for API fetch
@@ -43,16 +43,6 @@ export default function MapContainerComponent({ filters }: { filters: Filters })
 
   // Stores coordinates of the selected facility to zoom to after update
   const zoomTargetRef = useRef<L.LatLng | null>(null);
-
-  // Fetch data centers once on mount
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_REST_API_KEY;
-    if (!apiKey) return;
-    fetch('/api/data-centers', { headers: { 'x-api-key': apiKey } })
-      .then((r) => r.json())
-      .then((j) => setDcData(j.data ?? []))
-      .catch(console.error);
-  }, []);
 
   // Fetch facility data when filters change
   useEffect(() => {
@@ -97,6 +87,16 @@ export default function MapContainerComponent({ filters }: { filters: Filters })
     fetchFacilities();
   }, [filters.country, filters.fuel, filters.includeMicro]);
 
+  // Fetch data center data once on mount (US only, all stages)
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_REST_API_KEY;
+    if (!apiKey) return;
+    fetch('/api/data-centers', { headers: { 'x-api-key': apiKey } })
+      .then((r) => r.json())
+      .then((j) => setDcData(j.data ?? []))
+      .catch(console.error);
+  }, []);
+
   // Recenter or zoom map when facility data updates
   useEffect(() => {
     if (!mapRef.current || facilityData.length === 0) return;
@@ -138,7 +138,7 @@ export default function MapContainerComponent({ filters }: { filters: Filters })
               zoomTargetRef.current = L.latLng(facility.latitude, facility.longitude);
             }}
           />
-          <DCMarkers dataCenters={dcData} />
+          <DCMarkers facilities={dcData} />
         </MapContainer>
 
         {/* Legend overlay — bottom-left, above Leaflet controls */}
@@ -181,17 +181,27 @@ export default function MapContainerComponent({ filters }: { filters: Filters })
               <span>{label}</span>
             </div>
           ))}
-          <div style={{ borderTop: '1px solid #dee2e6', marginTop: '6px', paddingTop: '6px' }}>
-            <div style={{ fontWeight: 600, fontSize: '12px', marginBottom: '5px' }}>AI Data Centers</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '4px' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}>
-                <polygon points="6,0 12,6 6,12 0,6" fill={DC_COLOR} fillOpacity="0.85" stroke="white" strokeWidth="1.5"/>
-              </svg>
-              <span>Data Center</span>
-            </div>
-          </div>
           <div style={{ borderTop: '1px solid #dee2e6', marginTop: '5px', paddingTop: '5px', color: '#888', fontSize: '10px' }}>
-            Circle/diamond size = capacity
+            Circle size = capacity
+          </div>
+
+          {/* Data center legend */}
+          <div style={{ fontWeight: 600, fontSize: '12px', marginTop: '8px', marginBottom: '6px', borderBottom: '1px solid #dee2e6', paddingBottom: '4px' }}>
+            US Data Centers
+          </div>
+          {[
+            { label: 'Active',       color: '#6f42c1' },
+            { label: 'Construction', color: '#fd7e14' },
+            { label: 'Announced',    color: '#ffc107' },
+            { label: 'Other',        color: '#adb5bd' },
+          ].map(({ label, color }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '4px' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '2px', background: color, border: '1px solid rgba(0,0,0,0.15)', flexShrink: 0 }} />
+              <span>{label}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: '4px', color: '#888', fontSize: '10px' }}>
+            Square size = capacity
           </div>
         </div>
       </div>
