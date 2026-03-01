@@ -1,6 +1,6 @@
-      import { sql, eq, asc, gte, and, inArray } from 'drizzle-orm';
+      import { sql, eq, asc, gte, and } from 'drizzle-orm';
       import { db } from './dbConnection';
-      import { countries, fuelSources, facilities, capacityByCountry, generationByCountry, facilitiesView, dataCenters } from './dbSchema';
+      import { countries, fuelSources, facilities, facilitiesView, dataCenters } from './dbSchema';
 
 
 
@@ -81,89 +81,8 @@
       }
 
 
-      // This function fetches total power capacity (in MW) for each country,
-      // optionally filtered by a specific fuel type (like solar, wind, etc.)
-      export async function getCountryCapacity(fuelCode?: number | null) {
-        try {
-          const result = await db
-            .select({
-              // Select the readable country name
-              country_long: countries.country_long,
 
-              // Select the country code (e.g. "USA")
-              country_code: countries.country_code,
-
-              // Calculate the total capacity in megawatts, rounded to a whole number
-              capacity_mw: sql`ROUND(SUM(${facilities.capacity_mw}), 0)`.as('capacity_mw'),
-            })
-            // Start from the facilities table (where each power plant is listed)
-            .from(facilities)
-
-            // Join with the countries table to get readable country names
-            .innerJoin(countries, eq(facilities.country_code, countries.country_code))
-
-            // If a fuelCode is provided, filter to only include that fuel type
-            // If fuelCode is null or undefined, skip filtering and include all fuels
-            .where(fuelCode ? eq(facilities.fuel_code, fuelCode) : undefined)
-
-            // Group results by country so we get one row per country
-            .groupBy(countries.country_code, countries.country_long)
-
-            // Sort countries by total capacity, highest first
-            .orderBy(sql`SUM(${facilities.capacity_mw}) DESC`);
-
-          // Debug output
-          if (process.env.DEBUG) {
-            console.debug('getCountryCapacity query result:', result);
-          }
-
-          // Return the final result
-          return result;
-        } catch (error: any) {
-          // Debug output
-          if (process.env.DEBUG) {
-            console.debug('ORM getCountryCapacity error:', error?.message || error);
-          }
-
-          // Re-throw the error so it can be handled upstream
-          throw error;
-        }
-      }
-
-
-
-      // Function to get generation data by country
-      // Accepts an array of country codes and returns total generation by year
-      export async function getCountryGeneration(countryCodes: string[]) {
-        try {
-
-          // Validate countryCodes
-          if (countryCodes.length === 0) return [];
-
-          // Execute query to get generation by country and year
-          const result = await db
-            .select()
-            .from(generationByCountry)
-            .where(inArray(generationByCountry.country_code, countryCodes))
-            .orderBy(generationByCountry.country_code, generationByCountry.year);
-
-            // Debug output
-          if (process.env.DEBUG) {
-            console.debug('getCountryGeneration query result:', result);
-          }
-
-          // return result;
-          return result;
-        } catch (error: any) {
-          if (process.env.DEBUG) {
-            console.debug('ORM getCountryGeneration error:',  error?.message || error);
-          }
-          throw error;
-        }
-      }
-
-
-      //  function to get total power capacity (in MW) grouped by fuel type,
+  //  function to get total power capacity (in MW) grouped by fuel type,
       //  Optionally filtered by country and micro-facility threshold.
       export async function getFuelTypeCapacity(countryCode?: string | null, includeMicro = false) {
         try {

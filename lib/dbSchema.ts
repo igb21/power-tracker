@@ -3,8 +3,6 @@ import { InferSelectModel } from 'drizzle-orm';
 
 // Export types for the database objects to use in the application
 export type Facility = InferSelectModel<typeof facilitiesView>;
-export type Capacity = InferSelectModel<typeof capacityByCountry>;
-export type Generation = InferSelectModel<typeof generationByCountry>;
 
 
 
@@ -49,20 +47,6 @@ export const facilitiesView = sqliteTable('vw_facilities', {
 });
 
 
-// Capacity by country view
-export const capacityByCountry = sqliteTable('vw_country_capacity', {
-  country_long: text('country_long').notNull(),
-  country_code: text('country_code').notNull(),
-  capacity_mw : integer('capacity_mw').notNull(),
-});
-
-
-// Generation by country view
-export const generationByCountry = sqliteTable('vw_generation_by_country', {
-  country_code: text('country_code').notNull(),
-  year: integer('year').notNull(),
-  total_generation: real('total_generation'),
-});
 
 // AI / hyperscale data centers (Epoch AI dataset)
 export const dataCenters = sqliteTable('data_centers', {

@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import { Zap, MapPin, Globe, Table, TrendingUpDown } from 'lucide-react';
+import { Zap, MapPin, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
   { name: 'World Facility Map',     href: '/facility-map',     icon: MapPin },
   { name: 'World Capacity by Fuel', href: '/capacity-by-fuel', icon: Globe },
-  { name: 'Capacity by Country',    href: '/country-capacity', icon: Table },
-  { name: 'Generation over Time',   href: '/country-compare',  icon: TrendingUpDown },
 ];
 
 export default function TopNavbar() {
